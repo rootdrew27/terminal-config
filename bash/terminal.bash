@@ -5,10 +5,10 @@
 
 [[ $- == *i* ]] || return 0
 
-# Vi mode, with a short timeout so Esc switches to normal mode without a lag
+# Vi mode, with a short timeout so Esc switches to normal mode without a lag.
+# Ctrl+R reverse search is already bound in both vi keymaps.
 set -o vi
 bind 'set keyseq-timeout 10'
-bind -m vi-insert '"\C-r": reverse-search-history'
 
 # Cursor shape per vi mode: block in normal mode, bar in insert mode.
 # Readline prints the mode string before the last prompt line; \1 and \2 mark it
@@ -18,7 +18,7 @@ bind 'set vi-ins-mode-string "\1\e[6 q\2"'
 bind 'set vi-cmd-mode-string "\1\e[2 q\2"'
 # Steady block cursor for commands you run (vim etc. inherit it). PS0 prints
 # after a command is read and before it runs; append so Starship's PS0 survives.
-[[ ${PS0-} == *'\e[2 q'* ]] || PS0="${PS0-}"'\e[2 q'
+[[ ${PS0-} == *'\e[2 q'* ]] || PS0+='\e[2 q'
 
 # Clipboard: reads stdin. pbcopy (macOS), wl-copy (Wayland), xclip or xsel (X11).
 # Ubuntu: sudo apt install wl-clipboard   (Wayland)  or  xclip   (X11)
@@ -48,11 +48,11 @@ _last_cmd() {
   printf '%s' "$cmd"
 }
 
-# Ctrl+X C: copy the last command to the clipboard
+# Ctrl+X C: copy the last command to the clipboard (_clip reports a failure)
 _copy_last_cmd() {
   local cmd
   cmd=$(_last_cmd)
-  if printf '%s' "$cmd" | _clip; then echo "Copied: $cmd"; else echo "No clipboard tool found"; fi
+  printf '%s' "$cmd" | _clip && echo "Copied: $cmd"
 }
 # Ctrl+X is unbound on its own first. Otherwise it stays bound (self-insert in
 # insert mode), readline treats it as ambiguous, and the short keyseq-timeout
@@ -85,19 +85,15 @@ fi
 # zsh renderer, the only one honouring --keymap), drawn by readline's mode
 # strings, and Starship's own copy is trimmed off the prompt's last line.
 
-# $1 as a readline string: ANSI sequences wrapped as zero-width (\1...\2),
-# backslashes and double quotes escaped.
+# $1 as a readline string: backslashes and double quotes escaped, ANSI
+# sequences wrapped as zero-width (\1...\2).
 _rl_quote() {
-  local s=$1 out= c re=$'^(\e\\[[0-9;?]*[A-Za-z])(.*)$'
-  while [[ -n $s ]]; do
-    if [[ $s =~ $re ]]; then
-      out+='\1'"${BASH_REMATCH[1]//$'\e'/\\e}"'\2'; s=${BASH_REMATCH[2]}
-    else
-      c=${s:0:1}; s=${s:1}
-      case $c in '\'|'"') out+="\\$c" ;; *) out+=$c ;; esac
-    fi
+  local s=${1//\\/\\\\} out= re=$'^([^\e]*)(\e\\[[0-9;?]*[A-Za-z])(.*)$'
+  s=${s//\"/\\\"}
+  while [[ $s =~ $re ]]; do
+    out+=${BASH_REMATCH[1]}'\1'${BASH_REMATCH[2]}'\2'; s=${BASH_REMATCH[3]}
   done
-  printf '%s' "$out"
+  printf '%s' "$out$s"
 }
 
 # Runs after starship_precmd: picks the insert-mode symbol by exit status and
@@ -124,11 +120,10 @@ _vi_prompt_symbol() {
 if declare -F starship_precmd >/dev/null && [[ $PROMPT_COMMAND != *_vi_prompt_symbol* ]]; then
   _VI_SYM_OK=$(STARSHIP_SHELL=zsh starship module character --status=0)
   _VI_SYM_ERR=$(STARSHIP_SHELL=zsh starship module character --status=1)
-  _VI_SYM_CMD=$(STARSHIP_SHELL=zsh starship module character --status=0 --keymap=vicmd)
-  if [[ -n $_VI_SYM_OK && -n $_VI_SYM_ERR && -n $_VI_SYM_CMD ]]; then
+  _VI_RL_CMD=$(_rl_quote "$(STARSHIP_SHELL=zsh starship module character --status=0 --keymap=vicmd)")
+  if [[ -n $_VI_SYM_OK && -n $_VI_SYM_ERR && -n $_VI_RL_CMD ]]; then
     _VI_RL_OK=$(_rl_quote "$_VI_SYM_OK")
     _VI_RL_ERR=$(_rl_quote "$_VI_SYM_ERR")
-    _VI_RL_CMD=$(_rl_quote "$_VI_SYM_CMD")
     PROMPT_COMMAND+="${PROMPT_COMMAND:+;}_vi_prompt_symbol"
   else
     echo "terminal.bash: couldn't render Starship's [character] symbols; vi mode symbol disabled" >&2

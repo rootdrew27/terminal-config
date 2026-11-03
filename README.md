@@ -4,7 +4,7 @@ My [Ghostty](https://ghostty.org) terminal, [Starship](https://starship.rs) prom
 
 - **Ghostty**: Catppuccin Latte/Mocha (follows system light/dark), translucent window, drop-down quick terminal.
 - **Starship**: Pastel Powerline-style prompt (directory, git branch/status, Node version). Based on the [official preset](https://starship.rs/presets/pastel-powerline.html).
-- **Shell (zsh or bash)**: vi mode with a cursor that changes shape per mode, `Ctrl+X C` to copy the last command, and `cpout` to copy a command's output. The zsh and bash files provide the same features, including the prompt symbol flipping to `❮` in normal mode. Starship only supports that symbol in zsh and fish, so in bash it is drawn by readline from the `[character]` symbols in `starship.toml`. This needs the prompt's last line to be the `$character` module, as it is in this config.
+- **Shell (zsh or bash)**: vi mode with a cursor that changes shape per mode, `Ctrl+X C` to copy the last command, and `cpout` to copy a command's output. The zsh and bash files provide the same features, including the prompt symbol flipping to `❮` in normal mode.
 
 ## Layout
 
@@ -66,4 +66,5 @@ Ghostty reads `~/.config/ghostty/` on both OSes and, on macOS, also `~/Library/A
 
 - The Linux quick terminal needs Wayland with layer-shell support, and the global shortcut needs a desktop with global-shortcut support (e.g. KDE). Elsewhere it does nothing; edit `ghostty/linux.ghostty` to change it.
 - Check the Ghostty config with `ghostty +validate-config`. Browse themes with `ghostty +list-themes`. To confirm the per-OS file loaded, `ghostty +show-config | grep quick_terminal` should print the quick terminal keybind.
+- Starship only shows the normal-mode `❮` in zsh and fish, so in bash readline draws the `[character]` symbols from `starship.toml`. This needs the prompt's last line to be `$character`, as it is here; otherwise the bash file warns once and leaves Starship's prompt as is.
 - Machine-specific shell setup (PATH, nvm, Homebrew, cloud SDKs) is deliberately not included.
