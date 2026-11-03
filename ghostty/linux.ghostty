@@ -1,5 +1,9 @@
 # Linux-only Ghostty settings. Selected as platform.ghostty by install.sh.
 
+# Smaller than the shared size: GNOME's text scaling factor enlarges Ghostty's
+# fonts on Linux, so the shared size renders noticeably bigger than on macOS.
+font-size = 11
+
 # Quick terminal toggle. global: needs a desktop that supports global shortcuts
 # (xdg-desktop-portal GlobalShortcuts, e.g. KDE); the quick terminal itself needs
 # Wayland with layer-shell support. Where unsupported it simply does nothing.
