@@ -1,10 +1,10 @@
 # terminal-config
 
-My [Ghostty](https://ghostty.org) terminal, [Starship](https://starship.rs) prompt and zsh setup. Works on macOS and Linux (tested install on Ubuntu).
+My [Ghostty](https://ghostty.org) terminal, [Starship](https://starship.rs) prompt and zsh/bash setup. Works on macOS and Linux (tested install on Ubuntu).
 
 - **Ghostty**: Catppuccin Latte/Mocha (follows system light/dark), translucent window, drop-down quick terminal.
 - **Starship**: Pastel Powerline-style prompt (directory, git branch/status, Node version). Based on the [official preset](https://starship.rs/presets/pastel-powerline.html).
-- **zsh**: vi mode with a cursor that changes shape per mode, `Ctrl+X C` to copy the last command, and `cpout` to copy a command's output.
+- **Shell (zsh or bash)**: vi mode with a cursor that changes shape per mode, `Ctrl+X C` to copy the last command, and `cpout` to copy a command's output. The zsh and bash files provide the same features; in bash the vi mode shows only through the cursor shape, since Starship's `❮` normal-mode prompt symbol is zsh/fish only.
 
 ## Layout
 
@@ -14,6 +14,7 @@ ghostty/macos.ghostty    macOS-only settings (titlebar, Option-as-Alt, quick ter
 ghostty/linux.ghostty    Linux-only settings (quick terminal key)
 starship/starship.toml   Starship prompt
 zsh/terminal.zsh         portable zsh snippet (sourced from ~/.zshrc)
+bash/terminal.bash       the same features for bash 4.4+ (sourced from ~/.bashrc)
 install.sh               symlinks the files into place for the current OS
 ```
 
@@ -31,13 +32,15 @@ brew install starship
 **Ubuntu / Debian**
 
 ```sh
-sudo apt install zsh git
+sudo apt install git
 sudo apt install wl-clipboard   # Wayland (or: xclip for X11), used by the copy helpers
 curl -sS https://starship.rs/install.sh | sh   # Starship isn't in apt; see https://starship.rs
+# zsh only (bash users skip this):
+sudo apt install zsh
 chsh -s "$(command -v zsh)"     # make zsh your login shell, then log out and back in
 ```
 
-Ghostty has no official Ubuntu package. Options, per the [install docs](https://ghostty.org/docs/install/binary): the community [.deb builds](https://github.com/mkasberg/ghostty-ubuntu), `sudo snap install ghostty --classic`, or [build from source](https://ghostty.org/docs/install/build).
+Ghostty has no official Ubuntu package. Options, per the [install docs](https://ghostty.org/docs/install/binary): `sudo snap install ghostty --classic` (tracks the latest release), the community [.deb builds](https://github.com/mkasberg/ghostty-ubuntu), or [build from source](https://ghostty.org/docs/install/build). The config needs Ghostty 1.2.3 or later: older versions ignore the `config.ghostty` file name and reject some of its options and theme names.
 
 ### 2. Link the config
 
@@ -45,10 +48,13 @@ Ghostty has no official Ubuntu package. Options, per the [install docs](https://
 git clone <this repo> ~/terminal-config
 cd ~/terminal-config
 ./install.sh
-echo 'source ~/.config/zsh/terminal.zsh' >> ~/.zshrc
+echo 'source ~/.config/zsh/terminal.zsh' >> ~/.zshrc      # zsh
+echo 'source ~/.config/bash/terminal.bash' >> ~/.bashrc   # bash
 ```
 
 `install.sh` symlinks each file, so edits in the repo apply immediately (keep the clone where it is). Any existing file is moved to `<name>.bak-<timestamp>`, not deleted. Reload Ghostty with `cmd+shift+,` (macOS) or `ctrl+shift+,` (Linux).
+
+Ghostty also loads a legacy `config` file from the same directory, after `config.ghostty`, so its settings win. If you have one from an older setup, move it aside.
 
 ## How the OS split works
 

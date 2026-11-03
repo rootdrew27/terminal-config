@@ -46,10 +46,11 @@ echo "selected ghostty/platform.ghostty -> $PLATFORM.ghostty"
 link "$REPO/ghostty/config.ghostty"          "$GHOSTTY_DIR/config.ghostty"
 link "$REPO/starship/starship.toml"          "$XDG/starship.toml"
 link "$REPO/zsh/terminal.zsh"                "$XDG/zsh/terminal.zsh"
+link "$REPO/bash/terminal.bash"              "$XDG/bash/terminal.bash"
 
 echo
 missing=()
-for tool in ghostty starship zsh; do
+for tool in ghostty starship; do
   command -v "$tool" >/dev/null 2>&1 || missing+=("$tool")
 done
 if [ "$PLATFORM" = linux ] && ! command -v wl-copy >/dev/null 2>&1 \
@@ -62,6 +63,7 @@ if [ "${#missing[@]}" -gt 0 ]; then
   echo
 fi
 
-echo "Add this line to ~/.zshrc if it isn't there already:"
-echo "  source ~/.config/zsh/terminal.zsh"
-echo "Then reload Ghostty (cmd+shift+, on macOS, ctrl+shift+, on Linux) and open a new zsh shell."
+echo "Add the line for your shell if it isn't there already:"
+echo "  zsh  (~/.zshrc):   source ~/.config/zsh/terminal.zsh"
+echo "  bash (~/.bashrc):  source ~/.config/bash/terminal.bash"
+echo "Then reload Ghostty (cmd+shift+, on macOS, ctrl+shift+, on Linux) and open a new shell."
