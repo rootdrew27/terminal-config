@@ -58,12 +58,12 @@ Ghostty also loads a legacy `config` file from the same directory, after `config
 
 ## How the OS split works
 
-`ghostty/config.ghostty` ends with `config-file = ?platform.ghostty`. The installer points a gitignored symlink, `ghostty/platform.ghostty`, at `macos.ghostty` or `linux.ghostty`, so each OS only loads its own settings. The `?` makes the include optional. The symlink lives in the repo because Ghostty resolves includes relative to the config file's real location, not the symlink's.
+`ghostty/config.ghostty` ends with `config-file = ?platform.ghostty`. The installer links `platform.ghostty` to `macos.ghostty` or `linux.ghostty`, so each OS only loads its own settings. The `?` makes the include optional, which also means a missing link fails silently, so check with `ghostty +show-config` (see Notes). Ghostty 1.4 resolves the include next to the linked `config.ghostty`, while some earlier versions followed the symlink into the repo, so the installer creates the link in both places. The one in the repo is gitignored.
 
 Ghostty reads `~/.config/ghostty/` on both OSes and, on macOS, also `~/Library/Application Support/com.mitchellh.ghostty/`. The macOS path is loaded last and wins conflicts, so the script links there on macOS.
 
 ## Notes
 
 - The Linux quick terminal needs Wayland with layer-shell support, and the global shortcut needs a desktop with global-shortcut support (e.g. KDE). Elsewhere it does nothing; edit `ghostty/linux.ghostty` to change it.
-- Check the Ghostty config with `ghostty +validate-config`. Browse themes with `ghostty +list-themes`.
+- Check the Ghostty config with `ghostty +validate-config`. Browse themes with `ghostty +list-themes`. To confirm the per-OS file loaded, `ghostty +show-config | grep quick_terminal` should print the quick terminal keybind.
 - Machine-specific shell setup (PATH, nvm, Homebrew, cloud SDKs) is deliberately not included.

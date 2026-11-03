@@ -1,7 +1,7 @@
 # Shared Ghostty config (macOS + Linux). See all options: ghostty +show-config --default --docs
 # Reload with cmd+shift+, (macOS) or ctrl+shift+, (Linux).
 # OS-specific settings live in macos.ghostty / linux.ghostty; install.sh links the
-# right one as ghostty/platform.ghostty (a gitignored symlink in the repo).
+# right one as platform.ghostty next to this file (and as a gitignored link in the repo).
 
 # --- Appearance ---
 # Follows the system light/dark mode. Browse others: ghostty +list-themes
