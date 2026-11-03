@@ -1,30 +1,44 @@
 #!/usr/bin/env bash
-# Symlink this repo's configs into place (macOS and Linux). Existing files are
-# moved aside to <name>.bak-<timestamp>, never deleted.
+# Copy this repo's configs into place (macOS and Linux). Re-run after editing the
+# repo. Installed files that differ from the repo are moved aside to
+# <name>.bak-<timestamp>, never deleted.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 XDG="${XDG_CONFIG_HOME:-$HOME/.config}"
 
-link() {
+install_file() {
   local src="$1" dest="$2"
   mkdir -p "$(dirname "$dest")"
-  if [ -L "$dest" ] && [ "$(readlink "$dest")" = "$src" ]; then
-    echo "ok       $dest"
-    return
-  fi
-  if [ -e "$dest" ] || [ -L "$dest" ]; then
+  if [ -L "$dest" ]; then
+    case "$(readlink "$dest")" in
+      "$REPO"/*)
+        # A link from an earlier, symlinking version of this script: nothing to keep.
+        rm "$dest"
+        ;;
+      *)
+        mv "$dest" "$dest.bak-$STAMP"
+        echo "backup   $dest -> $dest.bak-$STAMP"
+        ;;
+    esac
+  elif [ -e "$dest" ]; then
+    if cmp -s "$src" "$dest"; then
+      echo "ok       $dest"
+      return
+    fi
     mv "$dest" "$dest.bak-$STAMP"
     echo "backup   $dest -> $dest.bak-$STAMP"
   fi
-  ln -s "$src" "$dest"
-  echo "linked   $dest -> $src"
+  # Copy to a temporary name first so a failed copy never leaves a partial config.
+  cp "$src" "$dest.tmp-$STAMP"
+  mv "$dest.tmp-$STAMP" "$dest"
+  echo "copied   $src -> $dest"
 }
 
 case "$(uname -s)" in
   Darwin)
-    # On macOS the Application Support file is loaded last and wins, so link there.
+    # On macOS the Application Support file is loaded last and wins, so install there.
     GHOSTTY_DIR="$HOME/Library/Application Support/com.mitchellh.ghostty"
     PLATFORM=macos
     ;;
@@ -38,16 +52,13 @@ case "$(uname -s)" in
     ;;
 esac
 
-# `config-file = ?platform.ghostty` picks the per-OS file. Ghostty 1.4 resolves it
-# next to the linked config.ghostty; some earlier versions followed the symlink and
-# resolved it inside the repo. Provide it in both places so either works.
-ln -sfn "$PLATFORM.ghostty" "$REPO/ghostty/platform.ghostty"
-echo "selected ghostty/platform.ghostty -> $PLATFORM.ghostty"
-link "$REPO/ghostty/config.ghostty"          "$GHOSTTY_DIR/config.ghostty"
-link "$REPO/ghostty/$PLATFORM.ghostty"       "$GHOSTTY_DIR/platform.ghostty"
-link "$REPO/starship/starship.toml"          "$XDG/starship.toml"
-link "$REPO/zsh/terminal.zsh"                "$XDG/zsh/terminal.zsh"
-link "$REPO/bash/terminal.bash"              "$XDG/bash/terminal.bash"
+# `config-file = ?platform.ghostty` in config.ghostty loads the per-OS file from
+# the same directory, so install this OS's file under that name.
+install_file "$REPO/ghostty/config.ghostty"     "$GHOSTTY_DIR/config.ghostty"
+install_file "$REPO/ghostty/$PLATFORM.ghostty"  "$GHOSTTY_DIR/platform.ghostty"
+install_file "$REPO/starship/starship.toml"     "$XDG/starship.toml"
+install_file "$REPO/zsh/terminal.zsh"           "$XDG/zsh/terminal.zsh"
+install_file "$REPO/bash/terminal.bash"         "$XDG/bash/terminal.bash"
 
 echo
 missing=()

@@ -15,7 +15,7 @@ ghostty/linux.ghostty    Linux-only settings (quick terminal key)
 starship/starship.toml   Starship prompt
 zsh/terminal.zsh         portable zsh snippet (sourced from ~/.zshrc)
 bash/terminal.bash       the same features for bash 4.4+ (sourced from ~/.bashrc)
-install.sh               symlinks the files into place for the current OS
+install.sh               copies the files into place for the current OS
 ```
 
 ## Install
@@ -52,15 +52,15 @@ echo 'source ~/.config/zsh/terminal.zsh' >> ~/.zshrc      # zsh
 echo 'source ~/.config/bash/terminal.bash' >> ~/.bashrc   # bash
 ```
 
-`install.sh` symlinks each file, so edits in the repo apply immediately (keep the clone where it is). Any existing file is moved to `<name>.bak-<timestamp>`, not deleted. Reload Ghostty with `cmd+shift+,` (macOS) or `ctrl+shift+,` (Linux).
+`install.sh` copies each file into place, so the clone can be moved or deleted afterwards. Edits in the repo apply only after re-running it; edits made to the installed files don't flow back to the repo. On a re-run, files that already match are left alone, and any existing file that differs is moved to `<name>.bak-<timestamp>`, not deleted. Reload Ghostty with `cmd+shift+,` (macOS) or `ctrl+shift+,` (Linux).
 
 Ghostty also loads a legacy `config` file from the same directory, after `config.ghostty`, so its settings win. If you have one from an older setup, move it aside.
 
 ## How the OS split works
 
-`ghostty/config.ghostty` ends with `config-file = ?platform.ghostty`. The installer links `platform.ghostty` to `macos.ghostty` or `linux.ghostty`, so each OS only loads its own settings. The `?` makes the include optional, which also means a missing link fails silently, so check with `ghostty +show-config` (see Notes). Ghostty 1.4 resolves the include next to the linked `config.ghostty`, while some earlier versions followed the symlink into the repo, so the installer creates the link in both places. The one in the repo is gitignored.
+`ghostty/config.ghostty` ends with `config-file = ?platform.ghostty`. The installer copies `macos.ghostty` or `linux.ghostty` next to the installed `config.ghostty` under the name `platform.ghostty`, so each OS only loads its own settings. The `?` makes the include optional, which also means a missing file fails silently, so check with `ghostty +show-config` (see Notes).
 
-Ghostty reads `~/.config/ghostty/` on both OSes and, on macOS, also `~/Library/Application Support/com.mitchellh.ghostty/`. The macOS path is loaded last and wins conflicts, so the script links there on macOS.
+Ghostty reads `~/.config/ghostty/` on both OSes and, on macOS, also `~/Library/Application Support/com.mitchellh.ghostty/`. The macOS path is loaded last and wins conflicts, so the script installs there on macOS.
 
 ## Notes
 
