@@ -78,4 +78,61 @@ if command -v starship >/dev/null && ! declare -F starship_precmd >/dev/null; th
   eval "$(starship init bash)"
 fi
 
+# Prompt symbol that flips with the vi mode (success/error symbol in insert mode,
+# vimcmd_symbol in normal mode). Starship can't do this in bash: it renders the
+# prompt once per command, and only zsh/fish report the vi mode to it. Instead
+# the [character] symbols are rendered once from starship.toml (via Starship's
+# zsh renderer, the only one honouring --keymap), drawn by readline's mode
+# strings, and Starship's own copy is trimmed off the prompt's last line.
+
+# $1 as a readline string: ANSI sequences wrapped as zero-width (\1...\2),
+# backslashes and double quotes escaped.
+_rl_quote() {
+  local s=$1 out= c re=$'^(\e\\[[0-9;?]*[A-Za-z])(.*)$'
+  while [[ -n $s ]]; do
+    if [[ $s =~ $re ]]; then
+      out+='\1'"${BASH_REMATCH[1]//$'\e'/\\e}"'\2'; s=${BASH_REMATCH[2]}
+    else
+      c=${s:0:1}; s=${s:1}
+      case $c in '\'|'"') out+="\\$c" ;; *) out+=$c ;; esac
+    fi
+  done
+  printf '%s' "$out"
+}
+
+# Runs after starship_precmd: picks the insert-mode symbol by exit status and
+# drops Starship's symbol line. Leaves the prompt alone, with a one-time
+# warning, if its last line isn't exactly the rendered symbol (custom format).
+_vi_prompt_symbol() {
+  local last=${PS1##*$'\n'} sym=$_VI_SYM_OK rl=$_VI_RL_OK
+  if [[ ${STARSHIP_CMD_STATUS:-0} != 0 ]]; then sym=$_VI_SYM_ERR rl=$_VI_RL_ERR; fi
+  last=${last//\\[/}; last=${last//\\]/}
+  if [[ $PS1 == *$'\n'* && $last == "$sym" ]]; then
+    PS1=${PS1%$'\n'*}$'\n'
+    bind "set vi-ins-mode-string \"\\1\\e[6 q\\2$rl\""
+    bind "set vi-cmd-mode-string \"\\1\\e[2 q\\2$_VI_RL_CMD\""
+  else
+    bind 'set vi-ins-mode-string "\1\e[6 q\2"'
+    bind 'set vi-cmd-mode-string "\1\e[2 q\2"'
+    if [[ -z ${_VI_SYM_WARNED-} ]]; then
+      _VI_SYM_WARNED=1
+      echo "terminal.bash: prompt's last line isn't Starship's [character] symbol; vi mode symbol disabled" >&2
+    fi
+  fi
+}
+
+if declare -F starship_precmd >/dev/null && [[ $PROMPT_COMMAND != *_vi_prompt_symbol* ]]; then
+  _VI_SYM_OK=$(STARSHIP_SHELL=zsh starship module character --status=0)
+  _VI_SYM_ERR=$(STARSHIP_SHELL=zsh starship module character --status=1)
+  _VI_SYM_CMD=$(STARSHIP_SHELL=zsh starship module character --status=0 --keymap=vicmd)
+  if [[ -n $_VI_SYM_OK && -n $_VI_SYM_ERR && -n $_VI_SYM_CMD ]]; then
+    _VI_RL_OK=$(_rl_quote "$_VI_SYM_OK")
+    _VI_RL_ERR=$(_rl_quote "$_VI_SYM_ERR")
+    _VI_RL_CMD=$(_rl_quote "$_VI_SYM_CMD")
+    PROMPT_COMMAND+="${PROMPT_COMMAND:+;}_vi_prompt_symbol"
+  else
+    echo "terminal.bash: couldn't render Starship's [character] symbols; vi mode symbol disabled" >&2
+  fi
+fi
+
 command -v tree >/dev/null && alias tree='tree -L 1'

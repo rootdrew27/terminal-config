@@ -4,7 +4,7 @@ My [Ghostty](https://ghostty.org) terminal, [Starship](https://starship.rs) prom
 
 - **Ghostty**: Catppuccin Latte/Mocha (follows system light/dark), translucent window, drop-down quick terminal.
 - **Starship**: Pastel Powerline-style prompt (directory, git branch/status, Node version). Based on the [official preset](https://starship.rs/presets/pastel-powerline.html).
-- **Shell (zsh or bash)**: vi mode with a cursor that changes shape per mode, `Ctrl+X C` to copy the last command, and `cpout` to copy a command's output. The zsh and bash files provide the same features; in bash the vi mode shows only through the cursor shape, since Starship's `❮` normal-mode prompt symbol is zsh/fish only.
+- **Shell (zsh or bash)**: vi mode with a cursor that changes shape per mode, `Ctrl+X C` to copy the last command, and `cpout` to copy a command's output. The zsh and bash files provide the same features, including the prompt symbol flipping to `❮` in normal mode. Starship only supports that symbol in zsh and fish, so in bash it is drawn by readline from the `[character]` symbols in `starship.toml`. This needs the prompt's last line to be the `$character` module, as it is in this config.
 
 ## Layout
 
