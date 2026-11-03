@@ -1,0 +1,7 @@
+# Linux-only Ghostty settings. Selected as platform.ghostty by install.sh.
+
+# Quick terminal toggle. global: needs a desktop that supports global shortcuts
+# (xdg-desktop-portal GlobalShortcuts, e.g. KDE); the quick terminal itself needs
+# Wayland with layer-shell support. Where unsupported it simply does nothing.
+# Remove "global:" to make it work only while Ghostty is focused.
+keybind = global:ctrl+grave_accent=toggle_quick_terminal
