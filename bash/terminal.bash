@@ -25,8 +25,8 @@ bind 'set vi-cmd-mode-string "\1\e[2 q\2"'
 _clip() {
   if command -v pbcopy >/dev/null; then pbcopy
   elif [[ -n ${WAYLAND_DISPLAY-} ]] && command -v wl-copy >/dev/null; then wl-copy
-  elif command -v xclip >/dev/null; then xclip -selection clipboard
-  elif command -v xsel >/dev/null; then xsel --clipboard --input
+  elif [[ -n ${DISPLAY-} ]] && command -v xclip >/dev/null; then xclip -selection clipboard
+  elif [[ -n ${DISPLAY-} ]] && command -v xsel >/dev/null; then xsel --clipboard --input
   else cat >/dev/null; echo "no clipboard tool found (install wl-clipboard or xclip)" >&2; return 1
   fi
 }
@@ -54,8 +54,16 @@ _copy_last_cmd() {
   cmd=$(_last_cmd)
   if printf '%s' "$cmd" | _clip; then echo "Copied: $cmd"; else echo "No clipboard tool found"; fi
 }
-bind -m vi-insert  -x '"\C-xc": _copy_last_cmd'
-bind -m vi-command -x '"\C-xc": _copy_last_cmd'
+# Ctrl+X is unbound on its own first. Otherwise it stays bound (self-insert in
+# insert mode), readline treats it as ambiguous, and the short keyseq-timeout
+# above expires before a human can press C, inserting a literal ^X instead.
+# Skipped when already bound: unbinding the prefix a second time breaks it.
+for _km in vi-insert vi-command; do
+  [[ $(bind -m "$_km" -X) == *'"\C-xc"'* ]] && continue
+  bind -m "$_km" -r '\C-x'
+  bind -m "$_km" -x '"\C-xc": _copy_last_cmd'
+done
+unset _km
 
 # cpout: re-run the last command and copy its output (beware of commands with side effects)
 cpout() {
